@@ -2,3 +2,4 @@ rootProject.name = 'studyboard-services'
 
 include 'service-discovery'
 include 'api-gateway'
+include 'user-service'

@@ -1,0 +1,21 @@
+server:
+  port: 8000
+
+spring:
+  application:
+    name: api-gateway
+  cloud:
+    gateway:
+      discovery:
+        locator:
+          enabled: true  # 서비스 디스커버리 활성화
+      routes:
+        - id: user-service
+          uri: lb://USER-SERVICE  # lb는 로드밸런서를 의미
+          predicates:
+            - Path=/api/users/**   # 이 경로로 오는 요청을 user-service로 라우팅
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/  # Eureka 서버 주소
