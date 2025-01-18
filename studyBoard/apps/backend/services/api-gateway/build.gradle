@@ -4,5 +4,5 @@ dependencies {
 }
 
 bootJar {
-    mainClass = 'com.studyboard.gateway.ApiGatewayApplication'
+    mainClass = 'com.studyboard.ApiGatewayApplication'
 }
