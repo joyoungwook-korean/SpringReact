@@ -5,14 +5,13 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 @Entity
 @Table(name = "users")
 @Getter
 @NoArgsConstructor
 public class User {
-    private static final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -33,13 +32,13 @@ public class User {
     @Builder
     public User(String email, String password, String username) {
         this.email = email;
-        this.password = passwordEncoder.encode(password);
+        this.password = password;
         this.username = username;
         this.role = role != null ? role : Role.USER;
     }
 
     public void setPassword(String newPassword) {
-        this.password = passwordEncoder.encode(newPassword);
+        this.password = newPassword;
     }
 
     public void promoteToAdmin() {

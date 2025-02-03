@@ -1,7 +1,9 @@
 package com.studyboard.user.application.service;
 
-import com.studyboard.user.application.dto.UserPasswordUpdateRequest;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import com.studyboard.user.application.dto.request.UserCreateRequest;
+import com.studyboard.user.application.dto.request.UserPasswordUpdateRequest;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.junit.jupiter.MockitoExtension;
 import com.studyboard.user.domain.model.User;
 import com.studyboard.user.domain.repository.UserRepository;
 import com.studyboard.user.domain.service.UserDomainService;
@@ -10,7 +12,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.DisplayName;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.Optional;
 
@@ -18,6 +21,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
+@ExtendWith(MockitoExtension.class)
 class UserApplicationServiceTest {
 
     @Mock
@@ -27,7 +31,7 @@ class UserApplicationServiceTest {
     private UserDomainService userDomainService;
 
     @Mock
-    private BCryptPasswordEncoder passwordEncoder;
+    private PasswordEncoder passwordEncoder;
 
     @InjectMocks
     private UserApplicationService userApplicationService;
@@ -36,12 +40,14 @@ class UserApplicationServiceTest {
 
     @BeforeEach
     void setUp() {
-        MockitoAnnotations.openMocks(this);
+        String encodedPassword = "encodedOldPassword";
         user = User.builder()
                 .email("test@example.com")
-                .password("oldPassword")
+                .password(encodedPassword)
                 .username("testuser")
                 .build();
+
+        ReflectionTestUtils.setField(user, "id", 1L);
     }
 
     @Test
@@ -52,14 +58,17 @@ class UserApplicationServiceTest {
         request.setNewPassword("newPassword123");
 
         when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+        when(passwordEncoder.matches("oldPassword", "encodedOldPassword")).thenReturn(true);
         when(userDomainService.isValidPassword("newPassword123")).thenReturn(true);
-        when(passwordEncoder.matches("oldPassword", user.getPassword())).thenReturn(true);
         when(passwordEncoder.encode("newPassword123")).thenReturn("encodedNewPassword123");
 
         userApplicationService.updatePassword(1L, request);
 
-        assertEquals(passwordEncoder.encode("newPassword123"), "encodedNewPassword123");
-        verify(userRepository, times(1)).save(user);
+        verify(passwordEncoder).matches("oldPassword", "encodedOldPassword");
+        verify(passwordEncoder).encode("newPassword123");
+        verify(userRepository).save(argThat(savedUser ->
+                savedUser.getPassword().equals("encodedNewPassword123")
+        ));
     }
 
     @Test
@@ -79,17 +88,31 @@ class UserApplicationServiceTest {
     }
 
     @Test
+    @DisplayName("유저를 찾을 수 없음")
     void updatePassword_UserNotFound() {
         UserPasswordUpdateRequest request = new UserPasswordUpdateRequest();
         request.setCurrentPassword("oldPassword");
         request.setNewPassword("newPassword123");
 
-        when(userRepository.findByID(1L)).thenReturn(Optional.empty());
+        when(userRepository.findById(1L)).thenReturn(Optional.empty());
 
         RuntimeException exception = assertThrows(RuntimeException.class,
                 () -> userApplicationService.updatePassword(1L, request));
 
         assertEquals("사용자를 찾을 수 없습니다.", exception.getMessage());
         verify(userRepository, never()).save(any(User.class));
+    }
+
+    @Test
+    @DisplayName("유저 생성")
+    void createUser_Success() {
+        UserCreateRequest request = new UserCreateRequest();
+        request.setRequestUserName(user.getUsername());
+        request.setRequestEmail(user.getEmail());
+        request.setRequestPassword("encodedOldPassword");
+
+
+
+
     }
 }

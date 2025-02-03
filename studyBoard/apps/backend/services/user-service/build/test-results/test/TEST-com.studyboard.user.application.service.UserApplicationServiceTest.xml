@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.studyboard.user.application.service.UserApplicationServiceTest" tests="3" skipped="0" failures="0" errors="0" timestamp="2025-01-24T06:19:28" hostname="Groooui-MacBookPro.local" time="0.289">
+  <properties/>
+  <testcase name="비밀번호 업데이트 성공" classname="com.studyboard.user.application.service.UserApplicationServiceTest" time="0.282"/>
+  <testcase name="비밀번호 업데이트 실패 - 현재 비밀번호 불일치" classname="com.studyboard.user.application.service.UserApplicationServiceTest" time="0.004"/>
+  <testcase name="유저를 찾을 수 없음" classname="com.studyboard.user.application.service.UserApplicationServiceTest" time="0.001"/>
+  <system-out><![CDATA[oldPassword
+encodedOldPassword
+wrongPassword
+encodedOldPassword
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

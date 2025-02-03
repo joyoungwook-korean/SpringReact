@@ -1,6 +1,6 @@
 package com.studyboard.user.application.service;
 
-import com.studyboard.user.application.dto.UserPasswordUpdateRequest;
+import com.studyboard.user.application.dto.request.UserPasswordUpdateRequest;
 import com.studyboard.user.domain.model.User;
 import com.studyboard.user.domain.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
