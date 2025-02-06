@@ -7,7 +7,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.transaction.annotation.Transactional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -22,13 +22,12 @@ class UserApplicationServiceIntegrationTest {
     private UserRepository userRepository;
 
     @Autowired
-    private BCryptPasswordEncoder passwordEncoder;
+    private PasswordEncoder passwordEncoder;
 
     private User user;
 
     @BeforeEach
     void setUp() {
-        // 비밀번호를 인코딩해서 저장
         String encodedPassword = passwordEncoder.encode("oldPassword");
 
         user = User.builder()
@@ -41,7 +40,7 @@ class UserApplicationServiceIntegrationTest {
         // 저장된 비밀번호 확인
         System.out.println("Stored encoded password: " + user.getPassword());
         System.out.println("Password match test: " +
-                passwordEncoder.matches("oldPassword", user.getPassword()));
+                passwordEncoder.matches("oldPassword", user.getPassword().getValue()));
     }
 
     @Test
@@ -54,7 +53,7 @@ class UserApplicationServiceIntegrationTest {
 
         User updatedUser = userRepository.findById(user.getId()).orElseThrow();
         assertTrue(passwordEncoder.matches(request.getNewPassword(),
-                updatedUser.getPassword()));
+                updatedUser.getPassword().getValue()));
     }
 
     @Test
@@ -78,7 +77,7 @@ class UserApplicationServiceIntegrationTest {
         RuntimeException exception = assertThrows(RuntimeException.class,
                 () -> userApplicationService.updatePassword(user.getId(), request));
 
-        assertEquals("새 비밀번호가 유효하지 않습니다.", exception.getMessage());
+        assertEquals("비밀번호는 8자 이상이어야 합니다.", exception.getMessage());
     }
 
     @Test

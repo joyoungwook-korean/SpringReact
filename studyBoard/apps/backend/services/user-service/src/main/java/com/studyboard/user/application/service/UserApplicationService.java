@@ -5,66 +5,37 @@ import com.studyboard.user.application.dto.request.UserPasswordUpdateRequest;
 import com.studyboard.user.application.dto.response.UserCreateResponse;
 import com.studyboard.user.domain.model.User;
 import com.studyboard.user.domain.repository.UserRepository;
-import com.studyboard.user.domain.service.UserDomainService;
+import com.studyboard.user.domain.vo.Password;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
 public class UserApplicationService {
 
     private final UserRepository userRepository;
-    private final UserDomainService userDomainService;
     private final PasswordEncoder passwordEncoder;
 
     @Transactional
-    public UserCreateResponse createUser(String email, String password, String username) {
-        // 1. 입력값 검증을 먼저 수행합니다
-        if (!userDomainService.isValidEmail(email)) {
-            return UserCreateResponse.builder()
-                    .success(false)
-                    .message("이메일 형식이 맞지 않습니다.")
-                    .build();
-        }
-
-        // 2. 이메일 중복 검사를 수행합니다
-        if (userRepository.existsByEmail(email)) {
-            return UserCreateResponse.builder()
-                    .success(false)
-                    .message("이미 사용중인 이메일입니다.")
-                    .build();
+    public UserCreateResponse createUser(UserCreateRequest request) {
+        if (userRepository.existsByEmail(request.getRequestEmail())) {
+            return UserCreateResponse.emailDuplication(request.getRequestEmail());
         }
 
         try {
-            // 3. 비밀번호 암호화 및 사용자 객체 생성
-            String encodedPassword = passwordEncoder.encode(password);
             User user = User.builder()
-                    .username(username)
-                    .email(email)
-                    .password(encodedPassword)
+                    .username(request.getRequestUserName())
+                    .email(request.getRequestEmail())
+                    .password(request.getRequestPassword())
                     .build();
 
-            // 4. 데이터베이스에 저장
+            user.setPassword(passwordEncoder.encode(request.getRequestPassword()));
             User savedUser = userRepository.save(user);
-
-            // 5. 성공 응답 생성
-            return UserCreateResponse.builder()
-                    .userId(savedUser.getId())
-                    .success(true)
-                    .message("회원가입이 성공적으로 완료되었습니다.")
-                    .build();
-
+            return UserCreateResponse.success(savedUser.getId());
         } catch (Exception e) {
-            // 6. 예외 처리
-            return UserCreateResponse.builder()
-                    .success(false)
-                    .message("회원가입 처리 중 오류가 발생했습니다.")
-                    .errors(List.of(e.getMessage()))
-                    .build();
+            return UserCreateResponse.error(e.getMessage());
         }
     }
 
@@ -73,19 +44,18 @@ public class UserApplicationService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));
 
-        System.out.println(request.getCurrentPassword());
-        System.out.println(user.getPassword());
-
-        if (!passwordEncoder.matches(request.getCurrentPassword(), user.getPassword())) {
+        if (!passwordEncoder.matches(request.getCurrentPassword(), user.getPassword().getValue())) {
             throw new RuntimeException("현재 비밀번호가 일치하지 않습니다.");
         }
 
-        if (!userDomainService.isValidPassword(request.getNewPassword())) {
-            throw new RuntimeException("새 비밀번호가 유효하지 않습니다.");
-        }
+        try {
+            new Password(request.getNewPassword());
 
-        String encodedPassword = passwordEncoder.encode(request.getNewPassword());
-        user.setPassword(encodedPassword);
-        userRepository.save(user);
+            String encodedPassword = passwordEncoder.encode(request.getNewPassword());
+            user.setPassword(encodedPassword);
+            userRepository.save(user);
+        }catch (IllegalArgumentException e){
+            throw new RuntimeException("새 비밀번호가 유효하지 않습니다 : " +  e.getMessage());
+        }
     }
 }
