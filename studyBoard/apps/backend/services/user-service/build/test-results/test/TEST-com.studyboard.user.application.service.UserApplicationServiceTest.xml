@@ -1,7 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<testsuite name="com.studyboard.user.application.service.UserApplicationServiceTest" tests="1" skipped="0" failures="0" errors="0" timestamp="2025-02-06T17:43:59" hostname="YoungWookui-MacBookPro.local" time="0.222">
-  <properties/>
-  <testcase name="유저 읽기 실패 - 존재하지 않는 id" classname="com.studyboard.user.application.service.UserApplicationServiceTest" time="0.222"/>
-  <system-out><![CDATA[]]></system-out>
-  <system-err><![CDATA[]]></system-err>
-</testsuite>
