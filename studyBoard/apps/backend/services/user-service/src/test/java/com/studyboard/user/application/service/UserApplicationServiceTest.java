@@ -2,7 +2,9 @@ package com.studyboard.user.application.service;
 
 import com.studyboard.user.application.dto.request.UserCreateRequest;
 import com.studyboard.user.application.dto.request.UserPasswordUpdateRequest;
+import com.studyboard.user.application.dto.request.UserSearchRequest;
 import com.studyboard.user.application.dto.response.UserCreateResponse;
+import com.studyboard.user.application.dto.response.UserSearchResponse;
 import com.studyboard.user.domain.model.User;
 import com.studyboard.user.domain.repository.UserRepository;
 import com.studyboard.user.domain.vo.Password;
@@ -186,5 +188,90 @@ class UserApplicationServiceTest {
         assertFalse(response.isSuccess());
         assertEquals("회원가입에 실패 했습니다.", response.getMessage());
         assertEquals("유효하지 않은 이메일 포맷입니다.", response.getErrors().get(0));
+    }
+
+    @Test
+    @DisplayName("유저 읽기 성공")
+    void findByEmail_Success() {
+        UserCreateRequest request = new UserCreateRequest();
+        request.setRequestEmail("test@example.com");
+        when(userRepository.findByEmail("test@example.com")).thenReturn(Optional.of(user));
+
+        UserSearchResponse response  = userApplicationService.findByEmail("test@example.com");
+
+        assertTrue(response.isSuccess());
+        assertEquals(request.getRequestEmail(), response.getEmail());
+    }
+
+    @Test
+    @DisplayName("유저 읽기 실패 - 존재하지 않는 email")
+    void findByEmail_NotFoundEmail() {
+        UserSearchRequest request = new UserSearchRequest();
+        request.setEmail("test@1234");
+
+        when(userRepository.findByEmail("test@1234")).thenReturn(Optional.empty());
+
+        UserSearchResponse response = userApplicationService.findByEmail(request.getEmail());
+
+        assertFalse(response.isSuccess());
+        assertEquals("등록되지 않은 email입니다. " + request.getEmail(), response.getMessage());
+    }
+
+    @Test
+    @DisplayName("유저 읽기 실패 - DB 에러")
+    void findByEmail_DBError() {
+        UserSearchRequest request = new UserSearchRequest();
+        request.setEmail("test@1234");
+
+        when(userRepository.findByEmail("test@1234")).thenThrow(new RuntimeException("DB 에러"));
+
+        UserSearchResponse response = userApplicationService.findByEmail(request.getEmail());
+
+        assertFalse(response.isSuccess());
+        assertEquals("예상 외의 에러가 발생했습니다.",response.getMessage() );
+        assertEquals("DB 에러", response.getErrors().get(0));
+    }
+
+    @Test
+    @DisplayName("유저 읽기 성공")
+    void findById_Success() {
+        UserSearchRequest request = new UserSearchRequest();
+        request.setId(1L);
+
+        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+
+        UserSearchResponse response  = userApplicationService.findById(request.getId());
+
+        assertTrue(response.isSuccess());
+        assertEquals(request.getId(), response.getId());
+    }
+
+    @Test
+    @DisplayName("유저 읽기 실패 - 존재하지 않는 id")
+    void findByIdl_NotFoundEmail() {
+        UserSearchRequest request = new UserSearchRequest();
+        request.setId(1L);
+
+        when(userRepository.findById(1L)).thenReturn(Optional.empty());
+
+        UserSearchResponse response = userApplicationService.findById(request.getId());
+
+        assertFalse(response.isSuccess());
+        assertEquals("등록되지 않은 Id입니다.", response.getMessage());
+    }
+
+    @Test
+    @DisplayName("유저 읽기 실패 - DB 에러")
+    void findById_DBError() {
+        UserSearchRequest request = new UserSearchRequest();
+        request.setId(1L);
+
+        when(userRepository.findById(request.getId())).thenThrow(new RuntimeException("DB 에러"));
+
+        UserSearchResponse response = userApplicationService.findById(request.getId());
+
+        assertFalse(response.isSuccess());
+        assertEquals("예상 외의 에러가 발생했습니다.",response.getMessage() );
+        assertEquals("DB 에러", response.getErrors().get(0));
     }
 }

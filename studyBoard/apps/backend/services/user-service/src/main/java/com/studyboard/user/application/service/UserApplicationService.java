@@ -3,6 +3,7 @@ package com.studyboard.user.application.service;
 import com.studyboard.user.application.dto.request.UserCreateRequest;
 import com.studyboard.user.application.dto.request.UserPasswordUpdateRequest;
 import com.studyboard.user.application.dto.response.UserCreateResponse;
+import com.studyboard.user.application.dto.response.UserSearchResponse;
 import com.studyboard.user.domain.model.User;
 import com.studyboard.user.domain.repository.UserRepository;
 import com.studyboard.user.domain.vo.Password;
@@ -14,9 +15,32 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @RequiredArgsConstructor
 public class UserApplicationService {
-
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+
+    @Transactional
+    public UserSearchResponse findById(long id) {
+        try {
+            return userRepository.findById(id)
+                    .map(UserSearchResponse::from)
+                    .orElse(UserSearchResponse.notFoundId());
+        }
+        catch (Exception e) {
+            return UserSearchResponse.error(e.getMessage());
+        }
+    }
+
+    @Transactional
+    public UserSearchResponse findByEmail(String email) {
+        try {
+            return userRepository.findByEmail(email)
+                    .map(UserSearchResponse::from)
+                    .orElse(UserSearchResponse.notFoundEmail(email));
+        }
+        catch (Exception e) {
+            return UserSearchResponse.error(e.getMessage());
+        }
+    }
 
     @Transactional
     public UserCreateResponse createUser(UserCreateRequest request) {
