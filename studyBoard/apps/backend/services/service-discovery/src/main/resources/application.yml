@@ -7,7 +7,7 @@ server:
 
 eureka:
   instance:
-    hostname: localhost
+    hostname: service-discovery
   client:
     register-with-eureka: true
     fetch-registry: true

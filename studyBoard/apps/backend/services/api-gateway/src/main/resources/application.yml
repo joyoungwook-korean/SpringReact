@@ -8,17 +8,22 @@ spring:
     gateway:
       discovery:
         locator:
-          enabled: true  # 서비스 디스커버리 활성화
+          enabled: true
+          lower-case-service-id: true  # 서비스 ID를 소문자로 처리
       routes:
         - id: user-service
-          uri: lb://USER-SERVICE  # lb는 로드밸런서를 의미
+          uri: lb://user-service  # 서비스 ID는 소문자로 변경
           predicates:
-            - Path=/api/users/**   # 이 경로로 오는 요청을 user-service로 라우팅
+            - Path=/api/users/**
 
 eureka:
   instance:
-    health-check-url: http://service-discovery:${server.port}/actuator/health  # ✅
-    status-page-url: http://service-discovery:${server.port}/actuator/info     # ✅
+    prefer-ip-address: true
+    lease-renewal-interval-in-seconds: 10
+    lease-expiration-duration-in-seconds: 20
   client:
     service-url:
-      defaultZone: http://service-discovery:8761/eureka/  # Eureka 서버 주소
+      defaultZone: http://service-discovery:8761/eureka/
+    registry-fetch-interval-seconds: 5
+    fetch-registry: true
+    register-with-eureka: true

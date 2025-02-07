@@ -1,0 +1,61 @@
+version: '3'
+services:
+  service-discovery:
+    hostname: service-discovery
+    build: ./backend/services/service-discovery
+    restart: unless-stopped
+    environment:
+      - SPRING_APPLICATION_NAME=eureka-server
+    container_name: service-discovery
+    ports:
+      - "8761:8761"
+    networks:
+      - service-net
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8761/actuator/health" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  api-gateway:
+    build: ./backend/services/api-gateway
+    container_name: api-gateway
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    networks:
+      - service-net
+    environment:
+      - SPRING_APPLICATION_NAME=api-gateway
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://service-discovery:8761/eureka
+      - SPRING_CLOUD_GATEWAY_DISCOVERY_LOCATOR_ENABLED=true
+
+  user-service:
+    build: ./backend/services/user-service
+    container_name: user-service
+    restart: unless-stopped
+    ports:
+      - "8001:8001"
+    depends_on:
+      api-gateway:
+        condition: service_started
+    networks:
+      - service-net
+    environment:
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://service-discovery:8761/eureka
+
+  frontend:
+    build: ./frontend
+    container_name: frontend
+    restart: unless-stopped
+    ports:
+      - "5173:5173"
+    environment:
+      - VITE_HOST=0.0.0.0
+      - VITE_API_GATEWAY_URL=http://localhost:8000
+    depends_on:
+      - api-gateway
+
+networks:
+  service-net:
+    driver: bridge
