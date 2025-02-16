@@ -20,7 +20,6 @@ public class UserController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void updatePassword(@PathVariable Long id, @Valid @RequestBody UserPasswordUpdateRequest request) {
         userApplicationService.updatePassword(id, request);
-
     }
 
     @PostMapping("/create")

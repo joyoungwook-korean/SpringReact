@@ -9,12 +9,24 @@ spring:
       discovery:
         locator:
           enabled: true
-          lower-case-service-id: true  # 서비스 ID를 소문자로 처리
+          lower-case-service-id: true
       routes:
         - id: user-service
-          uri: lb://user-service  # 서비스 ID는 소문자로 변경
+          uri: lb://user-service
           predicates:
             - Path=/api/users/**
+      global-cors:
+        cors-configurations:
+          '[/**]':
+            allowedOrigins: "http://localhost:5173"
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+              - OPTIONS
+            allowedHeaders: "*"
+            allowCredentials: true
 
 eureka:
   instance:
